@@ -8,7 +8,7 @@ This project was to develop a low-cost open-source multispectral camera for mapp
 
 Jon Williams - PhD Student, Department of Plant Sciences (@jonvw28)
 
-![me](me.jpg =160x120)
+<img src="me.jpg" width="120">
 
 Mayke De Freitas Santos - Technical Adviser and collaborator (@Maykef)
 
