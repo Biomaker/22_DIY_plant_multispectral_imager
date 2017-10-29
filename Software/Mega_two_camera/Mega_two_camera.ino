@@ -1,22 +1,26 @@
 //*******************************************************
-//              www.linksprite.com
+// 
+//  Adapted from manufacturer's code to use pcDuino camera
+//
+// This is designed to take two images from 2 pcDuino cameras using an Arduino Mega
+//
+// The user can alter baudrates and image sizes by changing the settings as outlined in the functions defined below.
+//
+// This cketch will only take two images then hold the camera. Adding a for loop shouldn't be too hard to do repeat imaging
+//
 // Note:
 // 1. SD must be formated to FAT16
-// 2. As the buffer of softserial has 64 bytes,
-//    so the code read 32 bytes each time
-// 3. Please add the libaray to the lib path
+// 2. Bridge the 53 pin to the Chip sleect pin on the SD shield
+/
 //
 // * SD card attached to SPI bus as follows:
-// * MOSI - pin 11
-// * MISO - pin 12
-// * CLK - pin 13
-// * CS - pin 4
+// * MOSI - pin 51
+// * MISO - pin 50
+// * CLK - pin 49
+// * CS - pin 53
 //*******************************************************
-#include <SoftwareSerial.h>
 #include <SPI.h>
 #include <SD.h>
- 
-//SoftwareSerial mySerial(64,65);          // Set Arduino pin 4 and 5 as softserial
  
 byte ZERO = 0x00;
 byte incomingbyte;
@@ -25,6 +29,8 @@ long int j2=0,k2=2,count2=0,ad2=0x0000;
 uint8_t MH,ML;
 boolean EndFlag1=0, EndFlag2=0;
 File  File1, File2;
+
+// Define Functions for pcDuino cameras
  
 void SendResetCmd(HardwareSerial &port)
 {
@@ -119,50 +125,56 @@ void StopTakePhotoCmd(HardwareSerial &port)
     port.write(0x01);
     port.write(0x03);
 }
+
+// Setup by initialising cameras
  
 void setup()
 {
     Serial.begin(38400);
     while (!Serial)
     {
-        ; // wait for serial port to connect. Needed for Leonardo only
+        ; // wait for serial port to connect.
     }
 
     // Set up SD Card
  
     Serial.print("Initializing SD card...");
-    // On the Ethernet Shield, CS is pin 4. It's set as an output by default.
-    // Note that even if it's not used as the CS pin, the hardware SS pin
-    // (10 on most Arduino boards, 53 on the Mega) must be left as an output
-    // or the SD library functions will not work.
     pinMode(53, OUTPUT);
     if (!SD.begin(53))
     {
+      // If this happens check you have bridged the SD chip select pin to pin 53 of the Mega
         Serial.println("initialization failed!");
         return;
     }
-
-    // Set up Cameras
-    
     Serial.println("initialization done.");
+    
+    // Set up Cameras
     Serial.print("Initialising Cameras...");
- 
+
+    // COnnect to cameras
     Serial1.begin(115200);
     Serial2.begin(115200);
     delay(100);
+    // Send reset commands and wait for this to happen
     SendResetCmd(Serial1);
     SendResetCmd(Serial2);
     delay(4000);
+    
+    // Set Baudrate - EDIT HERE IF YOU WANT A CHANGE
     SetBaudRateCmd(0x2A,Serial1);
     SetBaudRateCmd(0x2A,Serial2);
     delay(2000);
-    SetImageSizeCmd(0x1C,Serial1);
-    SetImageSizeCmd(0x1C,Serial2);
-    delay(3000);
+
+    
+    // MAKE SURE THIS MATCHES YOUR NEW BAUDRATE
     Serial1.begin(38400);
     Serial2.begin(38400);
     delay(100);
-
+    
+    // Set image size - EDIT HERE IF YOU WANT A CHANGE
+    SetImageSizeCmd(0x1C,Serial1);
+    SetImageSizeCmd(0x1C,Serial2);
+    delay(3000);
     Serial.println("Cameras Running!");
 }
  
@@ -175,8 +187,6 @@ void loop()
     int testi1,testi2;
 
     // take pictures
-
-    
     Serial.println("Taking Pictures");
     SendTakePhotoCmd(Serial1);
     SendTakePhotoCmd(Serial2);
@@ -194,6 +204,9 @@ void loop()
 
     // Save Pictue 1
 
+    // Here the data is read in the 32 byte chunks sent by the pcDuino camera.
+    // These are then stored in a 512 byte buffer which is written to SD card when full
+    // This reduces the handshakes with the SD card and speeds up data writing
     Serial.println("Saving Picture 1...");
     
     File1 = SD.open("serA.jpg", FILE_WRITE); //The file name should not be too long
@@ -207,7 +220,7 @@ void loop()
         count1=0;
         //mySerial.flush();
         SendReadDataCmd(Serial1,1);
-        delay(200);
+        delay(200); // Frustrating necessary or else you don't always get data
         Serial.print(Serial1.available());
         while(Serial1.available()>0)
         {
@@ -231,6 +244,8 @@ void loop()
         for(ii1=0; ii1<count1; ii1++){
           buff1[32*bf1i + ii1] = a1[ii1];
         }
+
+        // Comment out the loop below if you don't want the data bytes sent to the serial monitor
         for(testi1=0;testi1<count1;testi1++)
         {
             if(a1[testi1]<0x10)  Serial.print("0");
