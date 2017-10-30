@@ -27,6 +27,8 @@ To recreate the build follow the fritzing diagram below. A full list of parts is
 
 ![diagram](Hardware/multispectral_camera.png)
 
+![picture](Hardware/system_image.png)
+
 Once built compile the arduino sketch to run on the Mega. Hopefully this will work, but in any case I would recommend opening the serial monitor which should give helpful messages if this doesn't work.
 
 With the data on the SD card one can then use the python script get_ndvi.py to generate an NDVI map, and example call to the function is included in the file.
