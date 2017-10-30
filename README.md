@@ -27,7 +27,7 @@ To recreate the build follow the fritzing diagram below. A full list of parts is
 
 ![diagram](Hardware/multispectral_camera.png)
 
-![picture](Hardware/system_image.png)
+![picture](Hardware/system_image.jpg)
 
 Once built compile the arduino sketch to run on the Mega. Hopefully this will work, but in any case I would recommend opening the serial monitor which should give helpful messages if this doesn't work.
 
